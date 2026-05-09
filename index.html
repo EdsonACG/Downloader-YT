@@ -46,11 +46,11 @@
       color:white;font-weight:700;font-size:22px;transition:.2s ease
     }
     .heroBar button:hover{transform:translateY(-1px);filter:brightness(1.02)}
-    .heroBar button:disabled{opacity:.6;cursor:not-allowed}
+    .heroBar button:disabled{opacity:.6;cursor:not-allowed;transform:none}
     .chips{display:flex;justify-content:center;gap:24px;flex-wrap:wrap;margin:34px 0 0}
     .chip{
       width:58px;height:58px;border-radius:50%;border:none;background:#071849;color:#fff;
-      font-size:26px;display:grid;place-items:center;box-shadow:var(--shadow)
+      font-size:26px;display:grid;place-items:center;box-shadow:var(--shadow);user-select:none
     }
     .chip.more{background:#4d84ff}
     .miniStatus{margin:44px auto 0;max-width:720px}
@@ -65,16 +65,55 @@
     .progressBar{flex:1;height:14px;border-radius:999px;background:#edf1fb;overflow:hidden}
     .progressFill{width:0%;height:100%;background:linear-gradient(90deg,#7d97ff,#82c5f1);transition:width .2s linear}
     .progressText{font-size:14px;font-weight:700;color:var(--muted);min-width:56px;text-align:right}
-    .publicDownloadBtn{
-      margin-top:18px;min-height:54px;border:none;border-radius:18px;padding:0 22px;
-      background:#def7ea;color:#0b6c43;font-weight:800;cursor:pointer;font-size:16px
+    .publicDownloadBtn,
+    .secondaryBtn{
+      margin-top:18px;
+      min-height:54px;
+      border:none;
+      border-radius:18px;
+      padding:0 22px;
+      font-weight:800;
+      cursor:pointer;
+      font-size:16px;
+      transition:.2s ease;
     }
-    .publicDownloadBtn:disabled{opacity:.55;cursor:not-allowed}
+    .publicDownloadBtn{background:#def7ea;color:#0b6c43}
+    .secondaryBtn{background:#edf1ff;color:#243364;margin-left:8px}
+    .publicDownloadBtn:hover,.secondaryBtn:hover{transform:translateY(-1px);filter:brightness(1.02)}
+    .publicDownloadBtn:disabled{opacity:.55;cursor:not-allowed;transform:none}
     .errorText{color:var(--danger)!important}
+    .smallHint{margin-top:12px;font-size:12px;color:var(--muted);line-height:1.45}
+    .unlockCard{
+      border:1px solid rgba(108,135,245,.18);
+      background:rgba(255,255,255,.72);
+    }
+    .unlockIcon{
+      width:48px;
+      height:48px;
+      border-radius:16px;
+      background:linear-gradient(135deg,#8ea3ff,#89cdf3);
+      color:#fff;
+      display:grid;
+      place-items:center;
+      margin:0 auto 14px;
+      font-size:24px;
+      box-shadow:0 12px 32px rgba(108,135,245,.24);
+    }
+    .unlockActions{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
     @media(max-width:900px){
+      .page{padding-top:34px}
       .heroBar{grid-template-columns:1fr;border-radius:28px}
       .heroBar button{height:58px;font-size:18px}
       .heroBar input{font-size:18px;min-height:40px;padding-top:10px;padding-bottom:10px}
+      .chips{gap:14px}
+      .chip{width:50px;height:50px;font-size:22px}
+      .secondaryBtn{margin-left:0}
     }
   </style>
 </head>
@@ -83,7 +122,7 @@
     <div class="wrap">
       <div class="badge">Baixe seus vídeos favoritos do YouTube de maneira fácil e rápida</div>
       <h1>Download online de vídeos</h1>
-      <div class="subtitle">Volte sempre <span>adicione aos favoritos <3</span></div>
+      <div class="subtitle">Volte sempre <span>adicione aos favoritos &lt;3</span></div>
 
       <p class="disclaimer">
         Use apenas para conteúdos próprios, autorizados ou livres de direitos. O download de materiais protegidos por direitos autorais sem autorização é proibido.
@@ -99,6 +138,25 @@
         <div class="chip">◎</div><div class="chip">𝕏</div><div class="chip">v</div><div class="chip more">…</div>
       </div>
 
+      <!-- Aviso para liberar o ngrok gratuito no primeiro acesso de cada dispositivo -->
+      <section id="unlockNotice" class="miniStatus" hidden>
+        <div class="miniStatusCard unlockCard">
+          <div class="unlockIcon">🔓</div>
+          <strong>Autorizar servidor de download</strong>
+          <span>
+            Na primeira vez em cada dispositivo, o servidor pode pedir uma confirmação.
+            Clique abaixo, depois clique em <b>Visit Site</b>. Você voltará automaticamente para esta página.
+          </span>
+          <div class="unlockActions">
+            <button id="unlockNgrokBtn" class="publicDownloadBtn" type="button">Autorizar servidor</button>
+            <button id="alreadyUnlockedBtn" class="secondaryBtn" type="button">Já autorizei</button>
+          </div>
+          <div class="smallHint">
+            Isso é necessário apenas enquanto o backend estiver usando ngrok gratuito.
+          </div>
+        </div>
+      </section>
+
       <section class="miniStatus" id="miniStatus" hidden>
         <div class="miniStatusCard">
           <strong id="miniStatusTitle">Preparando download...</strong>
@@ -108,6 +166,7 @@
             <div id="progressText" class="progressText">0%</div>
           </div>
           <button id="downloadBtn" class="publicDownloadBtn" type="button" disabled>Baixar arquivo pronto</button>
+          <div class="smallHint" id="smallHint">Não feche esta página durante o processamento.</div>
         </div>
       </section>
     </div>
@@ -122,16 +181,31 @@
       miniStatusText: document.getElementById('miniStatusText'),
       progressFill: document.getElementById('progressFill'),
       progressText: document.getElementById('progressText'),
-      downloadBtn: document.getElementById('downloadBtn')
+      downloadBtn: document.getElementById('downloadBtn'),
+      unlockNotice: document.getElementById('unlockNotice'),
+      unlockNgrokBtn: document.getElementById('unlockNgrokBtn'),
+      alreadyUnlockedBtn: document.getElementById('alreadyUnlockedBtn')
     };
 
     let currentJobId = null;
     let pollingTimer = null;
+    let softProgress = 0;
+    let startedAt = 0;
 
     function setProgress(percent){
       const value = Math.max(0, Math.min(100, Math.round(percent || 0)));
-      els.progressFill.style.width = value + '%';
-      els.progressText.textContent = value + '%';
+      softProgress = Math.max(softProgress, value);
+      els.progressFill.style.width = softProgress + '%';
+      els.progressText.textContent = softProgress + '%';
+    }
+
+    function getLastImportantLog(logs){
+      const arr = logs || [];
+      for(let i = arr.length - 1; i >= 0; i--){
+        const line = String(arr[i].line || '');
+        if(line.trim()) return line;
+      }
+      return '';
     }
 
     function parseProgressFromLogs(logs){
@@ -151,6 +225,36 @@
       els.miniStatusText.classList.toggle('errorText', !!error);
     }
 
+    function tickSoftProgress(){
+      const elapsed = Math.floor((Date.now() - startedAt) / 1000);
+      if(softProgress < 8) setProgress(8);
+      else if(elapsed > 4 && softProgress < 15) setProgress(15);
+      else if(elapsed > 10 && softProgress < 25) setProgress(25);
+      else if(elapsed > 20 && softProgress < 35) setProgress(35);
+      else if(elapsed > 40 && softProgress < 45) setProgress(45);
+    }
+
+    function handleNgrokReturn(){
+      const params = new URLSearchParams(window.location.search);
+      if(params.get('ngrok_unlocked') === '1'){
+        localStorage.setItem('ngrok_unlocked', '1');
+        history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+
+    function shouldShowNgrokUnlock(){
+      return localStorage.getItem('ngrok_unlocked') !== '1';
+    }
+
+    function renderUnlockNotice(){
+      els.unlockNotice.hidden = !shouldShowNgrokUnlock();
+    }
+
+    function markNgrokUnlocked(){
+      localStorage.setItem('ngrok_unlocked', '1');
+      renderUnlockNotice();
+    }
+
     async function startDownload(){
       const url = els.videoUrl.value.trim();
       if(!url){
@@ -158,12 +262,23 @@
         return;
       }
 
+      if(shouldShowNgrokUnlock()){
+        els.unlockNotice.hidden = false;
+        els.unlockNotice.scrollIntoView({ behavior:'smooth', block:'center' });
+        alert('Antes do primeiro download neste dispositivo, clique em “Autorizar servidor”.');
+        return;
+      }
+
       if(pollingTimer) clearInterval(pollingTimer);
       currentJobId = null;
+      softProgress = 0;
+      startedAt = Date.now();
+
       els.searchBtn.disabled = true;
       els.downloadBtn.disabled = true;
-      setProgress(0);
-      setStatus('Preparando download...', 'Estamos processando seu vídeo em MP4 com áudio + vídeo juntos.');
+
+      setProgress(3);
+      setStatus('Conectando ao servidor...', 'Estamos criando o job de download.');
 
       try{
         const res = await fetch('/api/media/jobs', {
@@ -176,6 +291,9 @@
         if(!res.ok) throw new Error(data.detail || data.error || 'Falha ao criar job.');
 
         currentJobId = data.job_id;
+        setProgress(8);
+        setStatus('Processando...', 'Seu vídeo está sendo preparado.');
+
         pollingTimer = setInterval(checkStatus, 1200);
         await checkStatus();
       }catch(err){
@@ -188,6 +306,8 @@
       if(!currentJobId) return;
 
       try{
+        tickSoftProgress();
+
         const res = await fetch('/api/media/status/' + encodeURIComponent(currentJobId));
         const data = await res.json().catch(() => ({}));
         if(!res.ok) throw new Error(data.detail || data.error || 'Falha ao consultar status.');
@@ -195,43 +315,79 @@
         const progress = parseProgressFromLogs(data.logs || []);
         if(progress > 0) setProgress(progress);
 
+        const lastLog = getLastImportantLog(data.logs || []);
+        const lowerLog = lastLog.toLowerCase();
+
+        if(lastLog.includes('[download]')){
+          setStatus('Baixando vídeo...', 'O arquivo está sendo baixado e preparado.');
+        }else if(lowerLog.includes('merging')){
+          setProgress(Math.max(softProgress, 92));
+          setStatus('Unindo áudio e vídeo...', 'Estamos gerando o MP4 final.');
+        }else if(lowerLog.includes('ffmpeg')){
+          setStatus('Convertendo arquivo...', 'Estamos finalizando o MP4 com áudio.');
+        }else{
+          setStatus('Processando...', 'Seu vídeo está sendo baixado e convertido.');
+        }
+
         if(data.status === 'done'){
           clearInterval(pollingTimer);
           pollingTimer = null;
+
           setProgress(100);
           setStatus('Arquivo pronto', 'Clique no botão abaixo para baixar o MP4 final.');
+
           els.downloadBtn.disabled = false;
           els.searchBtn.disabled = false;
         }else if(data.status === 'error'){
           clearInterval(pollingTimer);
           pollingTimer = null;
-          setStatus('Erro no download', 'Não foi possível concluir. Verifique o backend e tente novamente.', true);
+
+          const errorLine = getLastImportantLog(data.logs || []) || 'Não foi possível concluir.';
+          setStatus('Erro no download', errorLine, true);
+
           els.searchBtn.disabled = false;
           els.downloadBtn.disabled = true;
-        }else{
-          setStatus('Processando...', 'Seu vídeo está sendo baixado e convertido.');
         }
       }catch(err){
         clearInterval(pollingTimer);
         pollingTimer = null;
+
         setStatus('Erro de conexão', err.message || String(err), true);
         els.searchBtn.disabled = false;
       }
     }
 
     function downloadResult(){
-  if(!currentJobId) return;
-  window.location.href = '/api/media/files/' + encodeURIComponent(currentJobId);
-}
+      if(!currentJobId) return;
+
+      /*
+        Usa navegação normal em vez de window.open/fetch/blob.
+        A rota /api/media/files/[jobId] redireciona para o backend,
+        e o backend deve responder com Content-Disposition: attachment.
+      */
+      window.location.href = '/api/media/files/' + encodeURIComponent(currentJobId);
+    }
 
     els.searchBtn.addEventListener('click', startDownload);
     els.downloadBtn.addEventListener('click', downloadResult);
+
     els.videoUrl.addEventListener('keydown', (e) => {
       if(e.key === 'Enter'){
         e.preventDefault();
         startDownload();
       }
     });
+
+    els.unlockNgrokBtn.addEventListener('click', () => {
+      window.location.href = '/api/ngrok-unlock';
+    });
+
+    els.alreadyUnlockedBtn.addEventListener('click', () => {
+      markNgrokUnlocked();
+    });
+
+    handleNgrokReturn();
+    renderUnlockNotice();
   </script>
 </body>
 </html>
