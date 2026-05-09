@@ -221,13 +221,7 @@
 
     function downloadResult(){
   if(!currentJobId) return;
-
-  const a = document.createElement('a');
-  a.href = '/api/media/files/' + encodeURIComponent(currentJobId);
-  a.download = '';
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
+  window.location.href = '/api/media/files/' + encodeURIComponent(currentJobId);
 }
 
     els.searchBtn.addEventListener('click', startDownload);
