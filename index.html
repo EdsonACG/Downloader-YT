@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Online Video Downloader</title>
+  <style>
+    :root{
+      --bg1:#dff3ff; --bg2:#f4edff; --bg3:#eefbe9;
+      --text:#0e1b4d; --muted:#7c86a8; --white:#fff;
+      --primary:#aebdfc; --primary-2:#9ec5f3; --primary-dark:#6c87f5;
+      --success:#1eae6f; --danger:#d64b61;
+      --shadow:0 18px 60px rgba(40,55,110,.10);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      color:var(--text);
+      background:linear-gradient(90deg,var(--bg1),var(--bg2),var(--bg3));
+    }
+    .page{min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:44px 20px 64px}
+    .wrap{width:min(1200px,100%);text-align:center}
+    .badge{
+      display:inline-flex;align-items:center;justify-content:center;
+      padding:10px 22px;border-radius:999px;background:rgba(255,255,255,.75);
+      box-shadow:var(--shadow);font-weight:600;margin-bottom:26px;backdrop-filter:blur(10px)
+    }
+    h1{margin:0;font-size:clamp(44px,7vw,72px);line-height:1.05;letter-spacing:-.04em;font-weight:800}
+    .subtitle{margin:20px 0 0;font-size:clamp(22px,2vw,34px);font-weight:600}
+    .subtitle span{color:var(--primary-dark)}
+    .disclaimer{margin:52px auto 18px;max-width:880px;color:var(--muted);font-size:14px;line-height:1.5}
+    .heroBar{
+      margin:14px auto 26px;max-width:1000px;background:rgba(255,255,255,.92);
+      border-radius:999px;box-shadow:var(--shadow);padding:14px;
+      display:grid;grid-template-columns:1fr 220px;gap:14px;align-items:center
+    }
+    .heroBar input{
+      border:none;outline:none;background:transparent;padding:0 18px;font-size:22px;color:var(--text);min-width:0
+    }
+    .heroBar input::placeholder{color:#9ca6c4}
+    .heroBar button{
+      border:none;outline:none;cursor:pointer;border-radius:999px;height:70px;
+      background:linear-gradient(135deg,var(--primary),var(--primary-2));
+      color:white;font-weight:700;font-size:22px;transition:.2s ease
+    }
+    .heroBar button:hover{transform:translateY(-1px);filter:brightness(1.02)}
+    .heroBar button:disabled{opacity:.6;cursor:not-allowed}
+    .chips{display:flex;justify-content:center;gap:24px;flex-wrap:wrap;margin:34px 0 0}
+    .chip{
+      width:58px;height:58px;border-radius:50%;border:none;background:#071849;color:#fff;
+      font-size:26px;display:grid;place-items:center;box-shadow:var(--shadow)
+    }
+    .chip.more{background:#4d84ff}
+    .miniStatus{margin:44px auto 0;max-width:720px}
+    .miniStatus[hidden]{display:none}
+    .miniStatusCard{
+      background:rgba(255,255,255,.84);border:1px solid rgba(255,255,255,.75);
+      box-shadow:var(--shadow);border-radius:30px;padding:24px;text-align:center;backdrop-filter:blur(12px)
+    }
+    .miniStatusCard strong{display:block;font-size:22px;margin-bottom:8px}
+    .miniStatusCard span{display:block;color:var(--muted);margin-bottom:16px;line-height:1.5}
+    .progressWrap{display:flex;align-items:center;gap:12px;margin:16px 0}
+    .progressBar{flex:1;height:14px;border-radius:999px;background:#edf1fb;overflow:hidden}
+    .progressFill{width:0%;height:100%;background:linear-gradient(90deg,#7d97ff,#82c5f1);transition:width .2s linear}
+    .progressText{font-size:14px;font-weight:700;color:var(--muted);min-width:56px;text-align:right}
+    .publicDownloadBtn{
+      margin-top:18px;min-height:54px;border:none;border-radius:18px;padding:0 22px;
+      background:#def7ea;color:#0b6c43;font-weight:800;cursor:pointer;font-size:16px
+    }
+    .publicDownloadBtn:disabled{opacity:.55;cursor:not-allowed}
+    .errorText{color:var(--danger)!important}
+    @media(max-width:900px){
+      .heroBar{grid-template-columns:1fr;border-radius:28px}
+      .heroBar button{height:58px;font-size:18px}
+      .heroBar input{font-size:18px;min-height:40px;padding-top:10px;padding-bottom:10px}
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="wrap">
+      <div class="badge">EasyUS Video Downloader</div>
+      <h1>Online Video Downloader</h1>
+      <div class="subtitle">Baixe vídeos de mais <span>de 1.000 sites</span></div>
+
+      <p class="disclaimer">
+        Use apenas para conteúdos próprios, autorizados ou livres de direitos. O download de materiais protegidos por direitos autorais sem autorização é proibido.
+      </p>
+
+      <div class="heroBar">
+        <input id="videoUrl" type="url" placeholder="Cole o link do seu vídeo aqui para fazer o download" />
+        <button id="searchBtn" type="button">Procurar</button>
+      </div>
+
+      <div class="chips" aria-hidden="true">
+        <div class="chip">▶</div><div class="chip">♪</div><div class="chip">f</div>
+        <div class="chip">◎</div><div class="chip">𝕏</div><div class="chip">v</div><div class="chip more">…</div>
+      </div>
+
+      <section class="miniStatus" id="miniStatus" hidden>
+        <div class="miniStatusCard">
+          <strong id="miniStatusTitle">Preparando download...</strong>
+          <span id="miniStatusText">Aguarde enquanto o arquivo é processado.</span>
+          <div class="progressWrap">
+            <div class="progressBar"><div id="progressFill" class="progressFill"></div></div>
+            <div id="progressText" class="progressText">0%</div>
+          </div>
+          <button id="downloadBtn" class="publicDownloadBtn" type="button" disabled>Baixar arquivo pronto</button>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const els = {
+      videoUrl: document.getElementById('videoUrl'),
+      searchBtn: document.getElementById('searchBtn'),
+      miniStatus: document.getElementById('miniStatus'),
+      miniStatusTitle: document.getElementById('miniStatusTitle'),
+      miniStatusText: document.getElementById('miniStatusText'),
+      progressFill: document.getElementById('progressFill'),
+      progressText: document.getElementById('progressText'),
+      downloadBtn: document.getElementById('downloadBtn')
+    };
+
+    let currentJobId = null;
+    let pollingTimer = null;
+
+    function setProgress(percent){
+      const value = Math.max(0, Math.min(100, Math.round(percent || 0)));
+      els.progressFill.style.width = value + '%';
+      els.progressText.textContent = value + '%';
+    }
+
+    function parseProgressFromLogs(logs){
+      let found = 0;
+      for(const item of logs || []){
+        const line = String(item.line || '');
+        const match = line.match(/(\d{1,3}(?:\.\d+)?)%/);
+        if(match) found = Math.max(found, Math.round(parseFloat(match[1])));
+      }
+      return found;
+    }
+
+    function setStatus(title, text, error=false){
+      els.miniStatus.hidden = false;
+      els.miniStatusTitle.textContent = title;
+      els.miniStatusText.textContent = text;
+      els.miniStatusText.classList.toggle('errorText', !!error);
+    }
+
+    async function startDownload(){
+      const url = els.videoUrl.value.trim();
+      if(!url){
+        alert('Cole a URL do vídeo.');
+        return;
+      }
+
+      if(pollingTimer) clearInterval(pollingTimer);
+      currentJobId = null;
+      els.searchBtn.disabled = true;
+      els.downloadBtn.disabled = true;
+      setProgress(0);
+      setStatus('Preparando download...', 'Estamos processando seu vídeo em MP4 com áudio + vídeo juntos.');
+
+      try{
+        const res = await fetch('/api/media/jobs', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ url, format:'mp4' })
+        });
+
+        const data = await res.json().catch(() => ({}));
+        if(!res.ok) throw new Error(data.detail || data.error || 'Falha ao criar job.');
+
+        currentJobId = data.job_id;
+        pollingTimer = setInterval(checkStatus, 1200);
+        await checkStatus();
+      }catch(err){
+        els.searchBtn.disabled = false;
+        setStatus('Erro ao iniciar download', err.message || String(err), true);
+      }
+    }
+
+    async function checkStatus(){
+      if(!currentJobId) return;
+
+      try{
+        const res = await fetch('/api/media/status/' + encodeURIComponent(currentJobId));
+        const data = await res.json().catch(() => ({}));
+        if(!res.ok) throw new Error(data.detail || data.error || 'Falha ao consultar status.');
+
+        const progress = parseProgressFromLogs(data.logs || []);
+        if(progress > 0) setProgress(progress);
+
+        if(data.status === 'done'){
+          clearInterval(pollingTimer);
+          pollingTimer = null;
+          setProgress(100);
+          setStatus('Arquivo pronto', 'Clique no botão abaixo para baixar o MP4 final.');
+          els.downloadBtn.disabled = false;
+          els.searchBtn.disabled = false;
+        }else if(data.status === 'error'){
+          clearInterval(pollingTimer);
+          pollingTimer = null;
+          setStatus('Erro no download', 'Não foi possível concluir. Verifique o backend e tente novamente.', true);
+          els.searchBtn.disabled = false;
+          els.downloadBtn.disabled = true;
+        }else{
+          setStatus('Processando...', 'Seu vídeo está sendo baixado e convertido.');
+        }
+      }catch(err){
+        clearInterval(pollingTimer);
+        pollingTimer = null;
+        setStatus('Erro de conexão', err.message || String(err), true);
+        els.searchBtn.disabled = false;
+      }
+    }
+
+    function downloadResult(){
+      if(!currentJobId) return;
+      window.open('/api/media/files/' + encodeURIComponent(currentJobId), '_blank');
+    }
+
+    els.searchBtn.addEventListener('click', startDownload);
+    els.downloadBtn.addEventListener('click', downloadResult);
+    els.videoUrl.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter'){
+        e.preventDefault();
+        startDownload();
+      }
+    });
+  </script>
+</body>
+</html>
