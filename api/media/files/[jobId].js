@@ -11,8 +11,20 @@ export default async function handler(req, res) {
 
   const { jobId } = req.query;
 
-  // Redirect é usado para não travar no limite de payload de Vercel Functions em arquivos grandes.
-  // A URL do backend não aparece no HTML nem na interface, mas pode aparecer para usuários avançados no DevTools durante o download.
-  const tokenQuery = process.env.BACKEND_TOKEN ? `?token=${encodeURIComponent(process.env.BACKEND_TOKEN)}` : '';
-  return res.redirect(302, `${backendUrl.replace(/\/$/, '')}/api/media/files/${encodeURIComponent(jobId)}${tokenQuery}`);
+  try {
+    const upstream = await fetch(`${backendUrl.replace(/\/$/, '')}/api/media/jobs/${encodeURIComponent(jobId)}`, {
+      method: 'GET',
+      headers: {
+        'ngrok-skip-browser-warning': 'true',
+        ...(process.env.BACKEND_TOKEN ? { 'X-Backend-Token': process.env.BACKEND_TOKEN } : {})
+      }
+    });
+
+    const text = await upstream.text();
+    res.status(upstream.status);
+    res.setHeader('Content-Type', upstream.headers.get('content-type') || 'application/json');
+    return res.send(text);
+  } catch (error) {
+    return res.status(502).json({ error: 'Falha ao consultar o backend.', detail: String(error?.message || error) });
+  }
 }
