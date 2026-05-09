@@ -47,6 +47,45 @@
     }
     .heroBar button:hover{transform:translateY(-1px);filter:brightness(1.02)}
     .heroBar button:disabled{opacity:.6;cursor:not-allowed;transform:none}
+
+    .formatSelector{
+      margin:8px auto 0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .formatOption{
+      min-height:48px;
+      border:none;
+      border-radius:999px;
+      padding:0 20px;
+      background:rgba(255,255,255,.68);
+      color:var(--text);
+      box-shadow:0 10px 30px rgba(40,55,110,.08);
+      font-weight:800;
+      cursor:pointer;
+      transition:.2s ease;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+    .formatOption:hover{
+      transform:translateY(-1px);
+      filter:brightness(1.02);
+    }
+    .formatOption.active{
+      background:linear-gradient(135deg,var(--primary),var(--primary-2));
+      color:#fff;
+    }
+    .formatHelp{
+      margin:12px auto 0;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.45;
+    }
+
     .chips{display:flex;justify-content:center;gap:24px;flex-wrap:wrap;margin:34px 0 0}
     .chip{
       width:58px;height:58px;border-radius:50%;border:none;background:#071849;color:#fff;
@@ -133,6 +172,13 @@
         <button id="searchBtn" type="button">Procurar</button>
       </div>
 
+
+      <div class="formatSelector" aria-label="Escolha o formato do download">
+        <button id="formatMp4Btn" class="formatOption active" type="button" data-format="mp4">🎬 MP4 vídeo</button>
+        <button id="formatMp3Btn" class="formatOption" type="button" data-format="mp3">🎧 MP3 áudio</button>
+      </div>
+      <div id="formatHelp" class="formatHelp">MP4 baixa vídeo com áudio. MP3 baixa somente o áudio.</div>
+
       <div class="chips" aria-hidden="true">
         <div class="chip">▶</div><div class="chip">♪</div><div class="chip">f</div>
         <div class="chip">◎</div><div class="chip">𝕏</div><div class="chip">v</div><div class="chip more">…</div>
@@ -182,6 +228,9 @@
       progressFill: document.getElementById('progressFill'),
       progressText: document.getElementById('progressText'),
       downloadBtn: document.getElementById('downloadBtn'),
+      formatMp4Btn: document.getElementById('formatMp4Btn'),
+      formatMp3Btn: document.getElementById('formatMp3Btn'),
+      formatHelp: document.getElementById('formatHelp'),
       unlockNotice: document.getElementById('unlockNotice'),
       unlockNgrokBtn: document.getElementById('unlockNgrokBtn'),
       alreadyUnlockedBtn: document.getElementById('alreadyUnlockedBtn')
@@ -189,6 +238,7 @@
 
     let currentJobId = null;
     let pollingTimer = null;
+    let currentFormat = 'mp4';
     let softProgress = 0;
     let startedAt = 0;
 
@@ -255,6 +305,20 @@
       renderUnlockNotice();
     }
 
+
+    function setFormat(format){
+      currentFormat = format === 'mp3' ? 'mp3' : 'mp4';
+
+      els.formatMp4Btn.classList.toggle('active', currentFormat === 'mp4');
+      els.formatMp3Btn.classList.toggle('active', currentFormat === 'mp3');
+
+      if(currentFormat === 'mp4'){
+        els.formatHelp.textContent = 'MP4 baixa o vídeo com áudio junto.';
+      }else{
+        els.formatHelp.textContent = 'MP3 baixa somente o áudio do vídeo.';
+      }
+    }
+
     async function startDownload(){
       const url = els.videoUrl.value.trim();
       if(!url){
@@ -276,15 +340,16 @@
 
       els.searchBtn.disabled = true;
       els.downloadBtn.disabled = true;
+      els.downloadBtn.textContent = 'Baixar arquivo pronto';
 
       setProgress(3);
-      setStatus('Conectando ao servidor...', 'Estamos criando o job de download.');
+      setStatus('Conectando ao servidor...', currentFormat === 'mp3' ? 'Estamos criando o job para baixar o áudio em MP3.' : 'Estamos criando o job para baixar o vídeo em MP4.');
 
       try{
         const res = await fetch('/api/media/jobs', {
           method:'POST',
           headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ url, format:'mp4' })
+          body: JSON.stringify({ url, format: currentFormat })
         });
 
         const data = await res.json().catch(() => ({}));
@@ -292,7 +357,7 @@
 
         currentJobId = data.job_id;
         setProgress(8);
-        setStatus('Processando...', 'Seu vídeo está sendo preparado.');
+        setStatus('Processando...', currentFormat === 'mp3' ? 'Seu áudio está sendo preparado.' : 'Seu vídeo está sendo preparado.');
 
         pollingTimer = setInterval(checkStatus, 1200);
         await checkStatus();
@@ -319,7 +384,7 @@
         const lowerLog = lastLog.toLowerCase();
 
         if(lastLog.includes('[download]')){
-          setStatus('Baixando vídeo...', 'O arquivo está sendo baixado e preparado.');
+          setStatus(currentFormat === 'mp3' ? 'Baixando áudio...' : 'Baixando vídeo...', 'O arquivo está sendo baixado e preparado.');
         }else if(lowerLog.includes('merging')){
           setProgress(Math.max(softProgress, 92));
           setStatus('Unindo áudio e vídeo...', 'Estamos gerando o MP4 final.');
@@ -334,8 +399,9 @@
           pollingTimer = null;
 
           setProgress(100);
-          setStatus('Arquivo pronto', 'Clique no botão abaixo para baixar o MP4 final.');
+          setStatus('Arquivo pronto', currentFormat === 'mp3' ? 'Clique no botão abaixo para baixar o MP3 final.' : 'Clique no botão abaixo para baixar o MP4 final.');
 
+          els.downloadBtn.textContent = currentFormat === 'mp3' ? 'Baixar MP3 pronto' : 'Baixar MP4 pronto';
           els.downloadBtn.disabled = false;
           els.searchBtn.disabled = false;
         }else if(data.status === 'error'){
@@ -370,6 +436,9 @@
 
     els.searchBtn.addEventListener('click', startDownload);
     els.downloadBtn.addEventListener('click', downloadResult);
+
+    els.formatMp4Btn.addEventListener('click', () => setFormat('mp4'));
+    els.formatMp3Btn.addEventListener('click', () => setFormat('mp3'));
 
     els.videoUrl.addEventListener('keydown', (e) => {
       if(e.key === 'Enter'){
