@@ -3,460 +3,91 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Online Video Downloader</title>
+  <title>Download online de vídeos</title>
   <style>
     :root{
-      --bg1:#dff3ff; --bg2:#f4edff; --bg3:#eefbe9;
-      --text:#0e1b4d; --muted:#7c86a8; --white:#fff;
-      --primary:#aebdfc; --primary-2:#9ec5f3; --primary-dark:#6c87f5;
-      --success:#1eae6f; --danger:#d64b61;
-      --shadow:0 18px 60px rgba(40,55,110,.10);
+      --bg1:#dff3ff;--bg2:#f4edff;--bg3:#eefbe9;--text:#0e1b4d;--muted:#7c86a8;
+      --primary:#aebdfc;--primary-2:#9ec5f3;--primary-dark:#6c87f5;--success:#1eae6f;--danger:#d64b61;
+      --card:rgba(255,255,255,.84);--line:rgba(14,27,77,.10);--shadow:0 18px 60px rgba(40,55,110,.10);--chip:#071849;
     }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0;
-      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-      color:var(--text);
-      background:linear-gradient(90deg,var(--bg1),var(--bg2),var(--bg3));
-    }
-    .page{min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:44px 20px 64px}
-    .wrap{width:min(1200px,100%);text-align:center}
-    .badge{
-      display:inline-flex;align-items:center;justify-content:center;
-      padding:10px 22px;border-radius:999px;background:rgba(255,255,255,.75);
-      box-shadow:var(--shadow);font-weight:600;margin-bottom:26px;backdrop-filter:blur(10px)
-    }
-    h1{margin:0;font-size:clamp(44px,7vw,72px);line-height:1.05;letter-spacing:-.04em;font-weight:800}
-    .subtitle{margin:20px 0 0;font-size:clamp(22px,2vw,34px);font-weight:600}
-    .subtitle span{color:var(--primary-dark)}
-    .disclaimer{margin:52px auto 18px;max-width:880px;color:var(--muted);font-size:14px;line-height:1.5}
-    .heroBar{
-      margin:14px auto 26px;max-width:1000px;background:rgba(255,255,255,.92);
-      border-radius:999px;box-shadow:var(--shadow);padding:14px;
-      display:grid;grid-template-columns:1fr 220px;gap:14px;align-items:center
-    }
-    .heroBar input{
-      border:none;outline:none;background:transparent;padding:0 18px;font-size:22px;color:var(--text);min-width:0
-    }
-    .heroBar input::placeholder{color:#9ca6c4}
-    .heroBar button{
-      border:none;outline:none;cursor:pointer;border-radius:999px;height:70px;
-      background:linear-gradient(135deg,var(--primary),var(--primary-2));
-      color:white;font-weight:700;font-size:22px;transition:.2s ease
-    }
-    .heroBar button:hover{transform:translateY(-1px);filter:brightness(1.02)}
-    .heroBar button:disabled{opacity:.6;cursor:not-allowed;transform:none}
-
-    .formatSelector{
-      margin:8px auto 0;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:12px;
-      flex-wrap:wrap;
-    }
-    .formatOption{
-      min-height:48px;
-      border:none;
-      border-radius:999px;
-      padding:0 20px;
-      background:rgba(255,255,255,.68);
-      color:var(--text);
-      box-shadow:0 10px 30px rgba(40,55,110,.08);
-      font-weight:800;
-      cursor:pointer;
-      transition:.2s ease;
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-    }
-    .formatOption:hover{
-      transform:translateY(-1px);
-      filter:brightness(1.02);
-    }
-    .formatOption.active{
-      background:linear-gradient(135deg,var(--primary),var(--primary-2));
-      color:#fff;
-    }
-    .formatHelp{
-      margin:12px auto 0;
-      color:var(--muted);
-      font-size:13px;
-      line-height:1.45;
-    }
-
-    .chips{display:flex;justify-content:center;gap:24px;flex-wrap:wrap;margin:34px 0 0}
-    .chip{
-      width:58px;height:58px;border-radius:50%;border:none;background:#071849;color:#fff;
-      font-size:26px;display:grid;place-items:center;box-shadow:var(--shadow);user-select:none
-    }
-    .chip.more{background:#4d84ff}
-    .miniStatus{margin:44px auto 0;max-width:720px}
-    .miniStatus[hidden]{display:none}
-    .miniStatusCard{
-      background:rgba(255,255,255,.84);border:1px solid rgba(255,255,255,.75);
-      box-shadow:var(--shadow);border-radius:30px;padding:24px;text-align:center;backdrop-filter:blur(12px)
-    }
-    .miniStatusCard strong{display:block;font-size:22px;margin-bottom:8px}
-    .miniStatusCard span{display:block;color:var(--muted);margin-bottom:16px;line-height:1.5}
-    .progressWrap{display:flex;align-items:center;gap:12px;margin:16px 0}
-    .progressBar{flex:1;height:14px;border-radius:999px;background:#edf1fb;overflow:hidden}
-    .progressFill{width:0%;height:100%;background:linear-gradient(90deg,#7d97ff,#82c5f1);transition:width .2s linear}
-    .progressText{font-size:14px;font-weight:700;color:var(--muted);min-width:56px;text-align:right}
-    .publicDownloadBtn,
-    .secondaryBtn{
-      margin-top:18px;
-      min-height:54px;
-      border:none;
-      border-radius:18px;
-      padding:0 22px;
-      font-weight:800;
-      cursor:pointer;
-      font-size:16px;
-      transition:.2s ease;
-    }
-    .publicDownloadBtn{background:#def7ea;color:#0b6c43}
-    .secondaryBtn{background:#edf1ff;color:#243364;margin-left:8px}
-    .publicDownloadBtn:hover,.secondaryBtn:hover{transform:translateY(-1px);filter:brightness(1.02)}
-    .publicDownloadBtn:disabled{opacity:.55;cursor:not-allowed;transform:none}
-    .errorText{color:var(--danger)!important}
-    .smallHint{margin-top:12px;font-size:12px;color:var(--muted);line-height:1.45}
-    .unlockCard{
-      border:1px solid rgba(108,135,245,.18);
-      background:rgba(255,255,255,.72);
-    }
-    .unlockIcon{
-      width:48px;
-      height:48px;
-      border-radius:16px;
-      background:linear-gradient(135deg,#8ea3ff,#89cdf3);
-      color:#fff;
-      display:grid;
-      place-items:center;
-      margin:0 auto 14px;
-      font-size:24px;
-      box-shadow:0 12px 32px rgba(108,135,245,.24);
-    }
-    .unlockActions{
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-    @media(max-width:900px){
-      .page{padding-top:34px}
-      .heroBar{grid-template-columns:1fr;border-radius:28px}
-      .heroBar button{height:58px;font-size:18px}
-      .heroBar input{font-size:18px;min-height:40px;padding-top:10px;padding-bottom:10px}
-      .chips{gap:14px}
-      .chip{width:50px;height:50px;font-size:22px}
-      .secondaryBtn{margin-left:0}
-    }
+    [data-theme="dark"]{--bg1:#0b1020;--bg2:#11162c;--bg3:#111827;--text:#eef3ff;--muted:#aab5d1;--primary:#7f99ff;--primary-2:#6bc8ef;--primary-dark:#9eb1ff;--card:rgba(20,28,52,.82);--line:rgba(255,255,255,.12);--shadow:0 20px 80px rgba(0,0,0,.32);--chip:#1b2544}
+    *{box-sizing:border-box}html,body{height:100%}
+    body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--text);background:radial-gradient(circle at top left,rgba(174,189,252,.34),transparent 32%),radial-gradient(circle at top right,rgba(158,197,243,.24),transparent 30%),linear-gradient(90deg,var(--bg1),var(--bg2),var(--bg3))}
+    .page{min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:34px 20px 64px}.wrap{width:min(1180px,100%);text-align:center}
+    .topline{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}.badge{display:inline-flex;align-items:center;justify-content:center;padding:10px 18px;border-radius:999px;background:rgba(255,255,255,.72);box-shadow:var(--shadow);font-weight:700;backdrop-filter:blur(10px);color:#0e1b4d}[data-theme="dark"] .badge{background:rgba(255,255,255,.10);color:var(--text)}
+    .serverStatus,.themeBtn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:10px 14px;color:var(--muted);font-weight:800;font-size:13px;box-shadow:var(--shadow)}.themeBtn{cursor:pointer;color:var(--text)}.serverDot{width:10px;height:10px;border-radius:50%;background:#c6cede}.serverStatus.online .serverDot{background:var(--success)}.serverStatus.offline .serverDot{background:var(--danger)}
+    h1{margin:0;font-size:clamp(42px,7vw,72px);line-height:1.05;letter-spacing:-.04em;font-weight:900}.subtitle{margin:20px 0 0;font-size:clamp(20px,2vw,32px);font-weight:700}.subtitle span{color:var(--primary-dark)}.disclaimer{margin:42px auto 18px;max-width:880px;color:var(--muted);font-size:14px;line-height:1.5}
+    .heroBar{margin:14px auto 18px;max-width:1000px;background:rgba(255,255,255,.92);border-radius:999px;box-shadow:var(--shadow);padding:14px;display:grid;grid-template-columns:1fr 220px;gap:14px;align-items:center}[data-theme="dark"] .heroBar{background:rgba(255,255,255,.10);border:1px solid var(--line)}
+    .heroBar input{border:none;outline:none;background:transparent;padding:0 18px;font-size:22px;color:var(--text);min-width:0}.heroBar input::placeholder{color:#9ca6c4}.heroBar button{border:none;outline:none;cursor:pointer;border-radius:999px;height:70px;background:linear-gradient(135deg,var(--primary),var(--primary-2));color:white;font-weight:800;font-size:22px;transition:.2s ease}.heroBar button:hover{transform:translateY(-1px);filter:brightness(1.02)}.heroBar button:disabled{opacity:.6;cursor:not-allowed;transform:none}
+    .optionsGrid{max-width:1000px;margin:0 auto 26px;display:grid;grid-template-columns:1fr 1fr;gap:14px}.optionCard{background:var(--card);border:1px solid var(--line);border-radius:28px;padding:16px;box-shadow:var(--shadow);backdrop-filter:blur(12px);text-align:left}.optionLabel{display:block;color:var(--muted);font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px}
+    .formatSelector,.qualitySelector{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.formatOption,.qualityOption{min-height:44px;border:none;border-radius:999px;padding:0 16px;background:rgba(255,255,255,.62);color:var(--text);border:1px solid var(--line);font-weight:900;cursor:pointer;transition:.2s ease}[data-theme="dark"] .formatOption,[data-theme="dark"] .qualityOption{background:rgba(255,255,255,.08)}.formatOption:hover,.qualityOption:hover{transform:translateY(-1px)}.formatOption.active,.qualityOption.active{background:linear-gradient(135deg,var(--primary),var(--primary-2));color:#fff;border-color:transparent}.formatHelp{color:var(--muted);font-size:13px;margin-top:10px;line-height:1.45}
+    .chips{display:flex;justify-content:center;gap:18px;flex-wrap:wrap;margin:26px 0 0}.chip{width:54px;height:54px;border-radius:50%;border:none;background:var(--chip);color:#fff;font-size:24px;display:grid;place-items:center;box-shadow:var(--shadow);user-select:none}.chip.more{background:#4d84ff}
+    .miniStatus,.previewWrap,.historyWrap,.adminWrap{margin:34px auto 0;max-width:1000px}.miniStatus[hidden],.previewWrap[hidden],.historyWrap[hidden],.adminWrap[hidden]{display:none}.miniStatusCard,.previewCard,.historyCard,.adminCard{background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:30px;padding:24px;text-align:center;backdrop-filter:blur(12px)}
+    .miniStatusCard strong{display:block;font-size:22px;margin-bottom:8px}.miniStatusCard span{display:block;color:var(--muted);margin-bottom:16px;line-height:1.5}.progressWrap{display:flex;align-items:center;gap:12px;margin:16px 0}.progressBar{flex:1;height:14px;border-radius:999px;background:rgba(126,145,190,.22);overflow:hidden}.progressFill{width:0%;height:100%;background:linear-gradient(90deg,#7d97ff,#82c5f1);transition:width .2s linear}.progressText{font-size:14px;font-weight:900;color:var(--muted);min-width:56px;text-align:right}
+    .btn,.publicDownloadBtn,.secondaryBtn,.dangerBtn{min-height:50px;border:none;border-radius:18px;padding:0 20px;font-weight:900;cursor:pointer;font-size:15px;transition:.2s ease;display:inline-flex;align-items:center;justify-content:center;gap:8px}.publicDownloadBtn{background:#def7ea;color:#0b6c43}.secondaryBtn{background:#edf1ff;color:#243364}.dangerBtn{background:#ffe4e9;color:#9d2034}.btn{background:linear-gradient(135deg,var(--primary),var(--primary-2));color:white}[data-theme="dark"] .secondaryBtn{background:rgba(255,255,255,.10);color:var(--text);border:1px solid var(--line)}.publicDownloadBtn:hover,.secondaryBtn:hover,.dangerBtn:hover,.btn:hover{transform:translateY(-1px);filter:brightness(1.02)}.publicDownloadBtn:disabled,.btn:disabled,.dangerBtn:disabled{opacity:.55;cursor:not-allowed;transform:none}.errorText{color:var(--danger)!important}.smallHint{margin-top:12px;font-size:12px;color:var(--muted);line-height:1.45}
+    .unlockCard{border:1px solid rgba(108,135,245,.18)}.unlockIcon{width:48px;height:48px;border-radius:16px;background:linear-gradient(135deg,#8ea3ff,#89cdf3);color:#fff;display:grid;place-items:center;margin:0 auto 14px;font-size:24px;box-shadow:0 12px 32px rgba(108,135,245,.24)}.unlockActions,.downloadActions{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
+    .previewCard{display:grid;grid-template-columns:280px 1fr;gap:18px;text-align:left;align-items:center}.thumbBox{position:relative;border-radius:22px;overflow:hidden;background:rgba(0,0,0,.08);min-height:160px}.thumbBox img{width:100%;height:100%;object-fit:cover;display:block}.durationBadge{position:absolute;right:10px;bottom:10px;background:rgba(0,0,0,.75);color:#fff;border-radius:10px;padding:6px 8px;font-weight:900;font-size:12px}.previewTitle{font-size:22px;font-weight:900;line-height:1.2;margin:0 0 10px}.previewMeta{color:var(--muted);font-weight:700;line-height:1.55}.previewActions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+    .historyCard,.adminCard{text-align:left}.sectionHeader{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}.sectionHeader h2{margin:0;font-size:22px}.historyList{display:grid;gap:10px}.historyItem{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;padding:14px;border:1px solid var(--line);border-radius:18px;background:rgba(255,255,255,.38)}[data-theme="dark"] .historyItem{background:rgba(255,255,255,.06)}.historyTitle{font-weight:900;line-height:1.25}.historyMeta{font-size:13px;color:var(--muted);margin-top:4px}
+    .adminGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.adminMetric{border:1px solid var(--line);border-radius:20px;padding:14px;background:rgba(255,255,255,.36)}[data-theme="dark"] .adminMetric{background:rgba(255,255,255,.06)}.adminMetric b{display:block;font-size:24px;margin-bottom:4px}.adminMetric span{color:var(--muted);font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:.06em}.footerTools{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:28px}
+    @media(max-width:900px){.topline{flex-direction:column}.heroBar{grid-template-columns:1fr;border-radius:28px}.heroBar button{height:58px;font-size:18px}.heroBar input{font-size:18px;min-height:40px;padding-top:10px;padding-bottom:10px}.optionsGrid{grid-template-columns:1fr}.previewCard{grid-template-columns:1fr}.adminGrid{grid-template-columns:repeat(2,1fr)}.chips{gap:14px}.chip{width:50px;height:50px;font-size:22px}.historyItem{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
-  <div class="page">
-    <div class="wrap">
+  <div class="page"><div class="wrap">
+    <div class="topline">
       <div class="badge">Baixe seus vídeos favoritos do YouTube de maneira fácil e rápida</div>
-      <h1>Download online de vídeos</h1>
-      <div class="subtitle">Volte sempre <span>adicione aos favoritos &lt;3</span></div>
-
-      <p class="disclaimer">
-        Use apenas para conteúdos próprios, autorizados ou livres de direitos. O download de materiais protegidos por direitos autorais sem autorização é proibido.
-      </p>
-
-      <div class="heroBar">
-        <input id="videoUrl" type="url" placeholder="Cole o link do seu vídeo aqui para fazer o download" />
-        <button id="searchBtn" type="button">Procurar</button>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+        <button id="themeBtn" class="themeBtn" type="button">🌙 Tema</button>
+        <div id="serverStatus" class="serverStatus"><span class="serverDot"></span><span id="serverStatusText">Verificando servidor...</span></div>
       </div>
-
-
-      <div class="formatSelector" aria-label="Escolha o formato do download">
-        <button id="formatMp4Btn" class="formatOption active" type="button" data-format="mp4">🎬 MP4 vídeo</button>
-        <button id="formatMp3Btn" class="formatOption" type="button" data-format="mp3">🎧 MP3 áudio</button>
-      </div>
-      <div id="formatHelp" class="formatHelp">MP4 baixa vídeo com áudio. MP3 baixa somente o áudio.</div>
-
-      <div class="chips" aria-hidden="true">
-        <div class="chip">▶</div><div class="chip">♪</div><div class="chip">f</div>
-        <div class="chip">◎</div><div class="chip">𝕏</div><div class="chip">v</div><div class="chip more">…</div>
-      </div>
-
-      <!-- Aviso para liberar o ngrok gratuito no primeiro acesso de cada dispositivo -->
-      <section id="unlockNotice" class="miniStatus" hidden>
-        <div class="miniStatusCard unlockCard">
-          <div class="unlockIcon">🔓</div>
-          <strong>Autorizar servidor de download</strong>
-          <span>
-            Na primeira vez em cada dispositivo, o servidor pode pedir uma confirmação.
-            Clique abaixo, depois clique em <b>Visit Site</b>. Você voltará automaticamente para esta página.
-          </span>
-          <div class="unlockActions">
-            <button id="unlockNgrokBtn" class="publicDownloadBtn" type="button">Autorizar servidor</button>
-            <button id="alreadyUnlockedBtn" class="secondaryBtn" type="button">Já autorizei</button>
-          </div>
-          <div class="smallHint">
-            Isso é necessário apenas enquanto o backend estiver usando ngrok gratuito.
-          </div>
-        </div>
-      </section>
-
-      <section class="miniStatus" id="miniStatus" hidden>
-        <div class="miniStatusCard">
-          <strong id="miniStatusTitle">Preparando download...</strong>
-          <span id="miniStatusText">Aguarde enquanto o arquivo é processado.</span>
-          <div class="progressWrap">
-            <div class="progressBar"><div id="progressFill" class="progressFill"></div></div>
-            <div id="progressText" class="progressText">0%</div>
-          </div>
-          <button id="downloadBtn" class="publicDownloadBtn" type="button" disabled>Baixar arquivo pronto</button>
-          <div class="smallHint" id="smallHint">Não feche esta página durante o processamento.</div>
-        </div>
-      </section>
     </div>
-  </div>
-
+    <h1>Download online de vídeos</h1><div class="subtitle">Volte sempre <span>adicione aos favoritos &lt;3</span></div>
+    <p class="disclaimer">Use apenas para conteúdos próprios, autorizados ou livres de direitos. O download de materiais protegidos por direitos autorais sem autorização é proibido.</p>
+    <div class="heroBar"><input id="videoUrl" type="url" placeholder="Cole o link do seu vídeo aqui para fazer o download" /><button id="searchBtn" type="button">Procurar</button></div>
+    <div class="optionsGrid">
+      <div class="optionCard"><span class="optionLabel">Formato</span><div class="formatSelector"><button id="formatMp4Btn" class="formatOption active" type="button">🎬 MP4 vídeo</button><button id="formatMp3Btn" class="formatOption" type="button">🎧 MP3 áudio</button></div><div id="formatHelp" class="formatHelp">MP4 baixa vídeo com áudio. MP3 baixa somente o áudio.</div></div>
+      <div class="optionCard"><span class="optionLabel">Qualidade</span><div class="qualitySelector"><button class="qualityOption active" type="button" data-quality="best">Melhor</button><button class="qualityOption" type="button" data-quality="1080">1080p</button><button class="qualityOption" type="button" data-quality="720">720p</button><button class="qualityOption" type="button" data-quality="480">480p</button></div><div class="formatHelp">Para MP3, a qualidade usa o melhor áudio disponível.</div></div>
+    </div>
+    <div class="chips" aria-hidden="true"><div class="chip">▶</div><div class="chip">♪</div><div class="chip">f</div><div class="chip">◎</div><div class="chip">𝕏</div><div class="chip">v</div><div class="chip more">…</div></div>
+    <section id="unlockNotice" class="miniStatus" hidden><div class="miniStatusCard unlockCard"><div class="unlockIcon">🔓</div><strong>Autorizar servidor de download</strong><span>Na primeira vez em cada dispositivo, o servidor pode pedir uma confirmação. Clique abaixo, depois clique em <b>Visit Site</b>. Você voltará automaticamente para esta página.</span><div class="unlockActions"><button id="unlockNgrokBtn" class="publicDownloadBtn" type="button">Autorizar servidor</button><button id="alreadyUnlockedBtn" class="secondaryBtn" type="button">Já autorizei</button></div><div class="smallHint">Isso é necessário apenas enquanto o backend estiver usando ngrok gratuito.</div></div></section>
+    <section id="previewWrap" class="previewWrap" hidden><div class="previewCard"><div class="thumbBox"><img id="previewThumb" alt="Thumbnail do vídeo" /><div id="previewDuration" class="durationBadge">--:--</div></div><div><h2 id="previewTitle" class="previewTitle">Título do vídeo</h2><div id="previewMeta" class="previewMeta">Canal • duração • formato</div><div class="previewActions"><button id="confirmDownloadBtn" class="btn" type="button">Baixar agora</button><button id="clearPreviewBtn" class="secondaryBtn" type="button">Trocar link</button></div></div></div></section>
+    <section class="miniStatus" id="miniStatus" hidden><div class="miniStatusCard"><strong id="miniStatusTitle">Preparando download...</strong><span id="miniStatusText">Aguarde enquanto o arquivo é processado.</span><div class="progressWrap"><div class="progressBar"><div id="progressFill" class="progressFill"></div></div><div id="progressText" class="progressText">0%</div></div><div class="downloadActions"><button id="downloadBtn" class="publicDownloadBtn" type="button" disabled>Baixar arquivo pronto</button><button id="cancelBtn" class="dangerBtn" type="button" disabled>Cancelar</button><button id="newDownloadBtn" class="secondaryBtn" type="button">Novo download</button></div><div class="smallHint">Não feche esta página durante o processamento.</div></div></section>
+    <section id="historyWrap" class="historyWrap" hidden><div class="historyCard"><div class="sectionHeader"><h2>Histórico desta sessão</h2><button id="clearHistoryBtn" class="secondaryBtn" type="button">Limpar histórico</button></div><div id="historyList" class="historyList"></div></div></section>
+    <section id="adminWrap" class="adminWrap" hidden><div class="adminCard"><div class="sectionHeader"><h2>Painel admin</h2><button id="refreshAdminBtn" class="secondaryBtn" type="button">Atualizar</button></div><div id="adminGrid" class="adminGrid"></div><div class="smallHint">O painel usa a rota protegida por BACKEND_TOKEN no proxy da Vercel.</div></div></section>
+    <div class="footerTools"><button id="historyToggleBtn" class="secondaryBtn" type="button">Ver histórico</button><button id="adminToggleBtn" class="secondaryBtn" type="button">Admin</button></div>
+  </div></div>
   <script>
-    const els = {
-      videoUrl: document.getElementById('videoUrl'),
-      searchBtn: document.getElementById('searchBtn'),
-      miniStatus: document.getElementById('miniStatus'),
-      miniStatusTitle: document.getElementById('miniStatusTitle'),
-      miniStatusText: document.getElementById('miniStatusText'),
-      progressFill: document.getElementById('progressFill'),
-      progressText: document.getElementById('progressText'),
-      downloadBtn: document.getElementById('downloadBtn'),
-      formatMp4Btn: document.getElementById('formatMp4Btn'),
-      formatMp3Btn: document.getElementById('formatMp3Btn'),
-      formatHelp: document.getElementById('formatHelp'),
-      unlockNotice: document.getElementById('unlockNotice'),
-      unlockNgrokBtn: document.getElementById('unlockNgrokBtn'),
-      alreadyUnlockedBtn: document.getElementById('alreadyUnlockedBtn')
-    };
-
-    let currentJobId = null;
-    let pollingTimer = null;
-    let currentFormat = 'mp4';
-    let softProgress = 0;
-    let startedAt = 0;
-
-    function setProgress(percent){
-      const value = Math.max(0, Math.min(100, Math.round(percent || 0)));
-      softProgress = Math.max(softProgress, value);
-      els.progressFill.style.width = softProgress + '%';
-      els.progressText.textContent = softProgress + '%';
-    }
-
-    function getLastImportantLog(logs){
-      const arr = logs || [];
-      for(let i = arr.length - 1; i >= 0; i--){
-        const line = String(arr[i].line || '');
-        if(line.trim()) return line;
-      }
-      return '';
-    }
-
-    function parseProgressFromLogs(logs){
-      let found = 0;
-      for(const item of logs || []){
-        const line = String(item.line || '');
-        const match = line.match(/(\d{1,3}(?:\.\d+)?)%/);
-        if(match) found = Math.max(found, Math.round(parseFloat(match[1])));
-      }
-      return found;
-    }
-
-    function setStatus(title, text, error=false){
-      els.miniStatus.hidden = false;
-      els.miniStatusTitle.textContent = title;
-      els.miniStatusText.textContent = text;
-      els.miniStatusText.classList.toggle('errorText', !!error);
-    }
-
-    function tickSoftProgress(){
-      const elapsed = Math.floor((Date.now() - startedAt) / 1000);
-      if(softProgress < 8) setProgress(8);
-      else if(elapsed > 4 && softProgress < 15) setProgress(15);
-      else if(elapsed > 10 && softProgress < 25) setProgress(25);
-      else if(elapsed > 20 && softProgress < 35) setProgress(35);
-      else if(elapsed > 40 && softProgress < 45) setProgress(45);
-    }
-
-    function handleNgrokReturn(){
-      const params = new URLSearchParams(window.location.search);
-      if(params.get('ngrok_unlocked') === '1'){
-        localStorage.setItem('ngrok_unlocked', '1');
-        history.replaceState({}, document.title, window.location.pathname);
-      }
-    }
-
-    function shouldShowNgrokUnlock(){
-      return localStorage.getItem('ngrok_unlocked') !== '1';
-    }
-
-    function renderUnlockNotice(){
-      els.unlockNotice.hidden = !shouldShowNgrokUnlock();
-    }
-
-    function markNgrokUnlocked(){
-      localStorage.setItem('ngrok_unlocked', '1');
-      renderUnlockNotice();
-    }
-
-
-    function setFormat(format){
-      currentFormat = format === 'mp3' ? 'mp3' : 'mp4';
-
-      els.formatMp4Btn.classList.toggle('active', currentFormat === 'mp4');
-      els.formatMp3Btn.classList.toggle('active', currentFormat === 'mp3');
-
-      if(currentFormat === 'mp4'){
-        els.formatHelp.textContent = 'MP4 baixa o vídeo com áudio junto.';
-      }else{
-        els.formatHelp.textContent = 'MP3 baixa somente o áudio do vídeo.';
-      }
-    }
-
-    async function startDownload(){
-      const url = els.videoUrl.value.trim();
-      if(!url){
-        alert('Cole a URL do vídeo.');
-        return;
-      }
-
-      if(shouldShowNgrokUnlock()){
-        els.unlockNotice.hidden = false;
-        els.unlockNotice.scrollIntoView({ behavior:'smooth', block:'center' });
-        alert('Antes do primeiro download neste dispositivo, clique em “Autorizar servidor”.');
-        return;
-      }
-
-      if(pollingTimer) clearInterval(pollingTimer);
-      currentJobId = null;
-      softProgress = 0;
-      startedAt = Date.now();
-
-      els.searchBtn.disabled = true;
-      els.downloadBtn.disabled = true;
-      els.downloadBtn.textContent = 'Baixar arquivo pronto';
-
-      setProgress(3);
-      setStatus('Conectando ao servidor...', currentFormat === 'mp3' ? 'Estamos criando o job para baixar o áudio em MP3.' : 'Estamos criando o job para baixar o vídeo em MP4.');
-
-      try{
-        const res = await fetch('/api/media/jobs', {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ url, format: currentFormat })
-        });
-
-        const data = await res.json().catch(() => ({}));
-        if(!res.ok) throw new Error(data.detail || data.error || 'Falha ao criar job.');
-
-        currentJobId = data.job_id;
-        setProgress(8);
-        setStatus('Processando...', currentFormat === 'mp3' ? 'Seu áudio está sendo preparado.' : 'Seu vídeo está sendo preparado.');
-
-        pollingTimer = setInterval(checkStatus, 1200);
-        await checkStatus();
-      }catch(err){
-        els.searchBtn.disabled = false;
-        setStatus('Erro ao iniciar download', err.message || String(err), true);
-      }
-    }
-
-    async function checkStatus(){
-      if(!currentJobId) return;
-
-      try{
-        tickSoftProgress();
-
-        const res = await fetch('/api/media/status/' + encodeURIComponent(currentJobId));
-        const data = await res.json().catch(() => ({}));
-        if(!res.ok) throw new Error(data.detail || data.error || 'Falha ao consultar status.');
-
-        const progress = parseProgressFromLogs(data.logs || []);
-        if(progress > 0) setProgress(progress);
-
-        const lastLog = getLastImportantLog(data.logs || []);
-        const lowerLog = lastLog.toLowerCase();
-
-        if(lastLog.includes('[download]')){
-          setStatus(currentFormat === 'mp3' ? 'Baixando áudio...' : 'Baixando vídeo...', 'O arquivo está sendo baixado e preparado.');
-        }else if(lowerLog.includes('merging')){
-          setProgress(Math.max(softProgress, 92));
-          setStatus('Unindo áudio e vídeo...', 'Estamos gerando o MP4 final.');
-        }else if(lowerLog.includes('ffmpeg')){
-          setStatus('Convertendo arquivo...', 'Estamos finalizando o MP4 com áudio.');
-        }else{
-          setStatus('Processando...', 'Seu vídeo está sendo baixado e convertido.');
-        }
-
-        if(data.status === 'done'){
-          clearInterval(pollingTimer);
-          pollingTimer = null;
-
-          setProgress(100);
-          setStatus('Arquivo pronto', currentFormat === 'mp3' ? 'Clique no botão abaixo para baixar o MP3 final.' : 'Clique no botão abaixo para baixar o MP4 final.');
-
-          els.downloadBtn.textContent = currentFormat === 'mp3' ? 'Baixar MP3 pronto' : 'Baixar MP4 pronto';
-          els.downloadBtn.disabled = false;
-          els.searchBtn.disabled = false;
-        }else if(data.status === 'error'){
-          clearInterval(pollingTimer);
-          pollingTimer = null;
-
-          const errorLine = getLastImportantLog(data.logs || []) || 'Não foi possível concluir.';
-          setStatus('Erro no download', errorLine, true);
-
-          els.searchBtn.disabled = false;
-          els.downloadBtn.disabled = true;
-        }
-      }catch(err){
-        clearInterval(pollingTimer);
-        pollingTimer = null;
-
-        setStatus('Erro de conexão', err.message || String(err), true);
-        els.searchBtn.disabled = false;
-      }
-    }
-
-    function downloadResult(){
-      if(!currentJobId) return;
-
-      /*
-        Usa navegação normal em vez de window.open/fetch/blob.
-        A rota /api/media/files/[jobId] redireciona para o backend,
-        e o backend deve responder com Content-Disposition: attachment.
-      */
-      window.location.href = '/api/media/files/' + encodeURIComponent(currentJobId);
-    }
-
-    els.searchBtn.addEventListener('click', startDownload);
-    els.downloadBtn.addEventListener('click', downloadResult);
-
-    els.formatMp4Btn.addEventListener('click', () => setFormat('mp4'));
-    els.formatMp3Btn.addEventListener('click', () => setFormat('mp3'));
-
-    els.videoUrl.addEventListener('keydown', (e) => {
-      if(e.key === 'Enter'){
-        e.preventDefault();
-        startDownload();
-      }
-    });
-
-    els.unlockNgrokBtn.addEventListener('click', () => {
-      window.location.href = '/api/ngrok-unlock';
-    });
-
-    els.alreadyUnlockedBtn.addEventListener('click', () => {
-      markNgrokUnlocked();
-    });
-
-    handleNgrokReturn();
-    renderUnlockNotice();
+    const $=id=>document.getElementById(id);
+    const els={themeBtn:$('themeBtn'),serverStatus:$('serverStatus'),serverStatusText:$('serverStatusText'),videoUrl:$('videoUrl'),searchBtn:$('searchBtn'),formatMp4Btn:$('formatMp4Btn'),formatMp3Btn:$('formatMp3Btn'),formatHelp:$('formatHelp'),qualityButtons:Array.from(document.querySelectorAll('.qualityOption')),unlockNotice:$('unlockNotice'),unlockNgrokBtn:$('unlockNgrokBtn'),alreadyUnlockedBtn:$('alreadyUnlockedBtn'),previewWrap:$('previewWrap'),previewThumb:$('previewThumb'),previewDuration:$('previewDuration'),previewTitle:$('previewTitle'),previewMeta:$('previewMeta'),confirmDownloadBtn:$('confirmDownloadBtn'),clearPreviewBtn:$('clearPreviewBtn'),miniStatus:$('miniStatus'),miniStatusTitle:$('miniStatusTitle'),miniStatusText:$('miniStatusText'),progressFill:$('progressFill'),progressText:$('progressText'),downloadBtn:$('downloadBtn'),cancelBtn:$('cancelBtn'),newDownloadBtn:$('newDownloadBtn'),historyWrap:$('historyWrap'),historyList:$('historyList'),clearHistoryBtn:$('clearHistoryBtn'),historyToggleBtn:$('historyToggleBtn'),adminToggleBtn:$('adminToggleBtn'),adminWrap:$('adminWrap'),adminGrid:$('adminGrid'),refreshAdminBtn:$('refreshAdminBtn')};
+    let currentJobId=null,pollingTimer=null,softProgress=0,startedAt=0,currentFormat='mp4',currentQuality='best',currentInfo=null;
+    function setTheme(t){document.documentElement.dataset.theme=t;localStorage.setItem('site_theme',t);els.themeBtn.textContent=t==='dark'?'☀️ Tema':'🌙 Tema'}
+    function initTheme(){setTheme(localStorage.getItem('site_theme')||'')}
+    function setFormat(f){currentFormat=f==='mp3'?'mp3':'mp4';els.formatMp4Btn.classList.toggle('active',currentFormat==='mp4');els.formatMp3Btn.classList.toggle('active',currentFormat==='mp3');els.formatHelp.textContent=currentFormat==='mp3'?'MP3 baixa somente o áudio do vídeo.':'MP4 baixa o vídeo com áudio junto.';els.qualityButtons.forEach(b=>{b.disabled=currentFormat==='mp3'&&b.dataset.quality!=='best';b.style.opacity=b.disabled?'.45':'1'});if(currentFormat==='mp3')setQuality('best')}
+    function setQuality(q){currentQuality=q||'best';els.qualityButtons.forEach(b=>b.classList.toggle('active',b.dataset.quality===currentQuality))}
+    function handleNgrokReturn(){const p=new URLSearchParams(location.search);if(p.get('ngrok_unlocked')==='1'){localStorage.setItem('ngrok_unlocked','1');history.replaceState({},document.title,location.pathname)}}
+    function shouldShowNgrokUnlock(){return localStorage.getItem('ngrok_unlocked')!=='1'} function renderUnlockNotice(){els.unlockNotice.hidden=!shouldShowNgrokUnlock()} function markNgrokUnlocked(){localStorage.setItem('ngrok_unlocked','1');renderUnlockNotice()}
+    function setProgress(p){const v=Math.max(0,Math.min(100,Math.round(p||0)));softProgress=Math.max(softProgress,v);els.progressFill.style.width=softProgress+'%';els.progressText.textContent=softProgress+'%'}
+    function getLastImportantLog(logs){const a=logs||[];for(let i=a.length-1;i>=0;i--){const l=String(a[i].line||'');if(l.trim())return l}return''}
+    function parseProgressFromLogs(logs){let f=0;for(const item of logs||[]){const m=String(item.line||'').match(/(\d{1,3}(?:\.\d+)?)%/);if(m)f=Math.max(f,Math.round(parseFloat(m[1])))}return f}
+    function setStatus(t,txt,e=false){els.miniStatus.hidden=false;els.miniStatusTitle.textContent=t;els.miniStatusText.textContent=txt;els.miniStatusText.classList.toggle('errorText',!!e)}
+    function tickSoftProgress(){const e=Math.floor((Date.now()-startedAt)/1000);if(softProgress<8)setProgress(8);else if(e>4&&softProgress<15)setProgress(15);else if(e>10&&softProgress<25)setProgress(25);else if(e>20&&softProgress<35)setProgress(35);else if(e>40&&softProgress<45)setProgress(45)}
+    function formatDuration(sec){sec=Number(sec||0);if(!sec)return'--:--';const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=Math.floor(sec%60);return h?`${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`:`${m}:${String(s).padStart(2,'0')}`}
+    async function checkServer(){try{const r=await fetch('/api/health');const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'offline');els.serverStatus.classList.remove('offline');els.serverStatus.classList.add('online');els.serverStatusText.textContent='Servidor online'}catch(e){els.serverStatus.classList.remove('online');els.serverStatus.classList.add('offline');els.serverStatusText.textContent='Servidor offline'}}
+    async function fetchInfo(){const url=els.videoUrl.value.trim();if(!url){alert('Cole a URL do vídeo.');return}if(shouldShowNgrokUnlock()){els.unlockNotice.hidden=false;els.unlockNotice.scrollIntoView({behavior:'smooth',block:'center'});alert('Antes do primeiro download neste dispositivo, clique em “Autorizar servidor”.');return}currentInfo=null;els.searchBtn.disabled=true;setStatus('Buscando informações...','Estamos lendo o título, thumbnail e duração do vídeo.');try{const r=await fetch('/api/media/info',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.detail||d.error||'Não foi possível ler o vídeo.');currentInfo=d;renderPreview(d);els.miniStatus.hidden=true}catch(e){setStatus('Não conseguimos ler esse link',e.message||String(e),true)}finally{els.searchBtn.disabled=false}}
+    function renderPreview(d){els.previewThumb.src=d.thumbnail||'';els.previewDuration.textContent=formatDuration(d.duration);els.previewTitle.textContent=d.title||'Vídeo encontrado';const up=d.uploader||d.channel||'Canal não informado';const fl=currentFormat==='mp3'?'MP3 áudio':`MP4 ${currentQuality==='best'?'melhor qualidade':currentQuality+'p'}`;els.previewMeta.textContent=`${up} • ${formatDuration(d.duration)} • ${fl}`;els.previewWrap.hidden=false;els.previewWrap.scrollIntoView({behavior:'smooth',block:'center'})}
+    async function startDownload(){const url=els.videoUrl.value.trim();if(!url){alert('Cole a URL do vídeo.');return}if(shouldShowNgrokUnlock()){els.unlockNotice.hidden=false;els.unlockNotice.scrollIntoView({behavior:'smooth',block:'center'});alert('Antes do primeiro download neste dispositivo, clique em “Autorizar servidor”.');return}if(pollingTimer)clearInterval(pollingTimer);currentJobId=null;softProgress=0;startedAt=Date.now();els.confirmDownloadBtn.disabled=true;els.searchBtn.disabled=true;els.downloadBtn.disabled=true;els.cancelBtn.disabled=true;els.downloadBtn.textContent='Baixar arquivo pronto';setProgress(3);setStatus('Conectando ao servidor...',currentFormat==='mp3'?'Estamos criando o job para baixar o áudio em MP3.':'Estamos criando o job para baixar o vídeo em MP4.');try{const r=await fetch('/api/media/jobs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url,format:currentFormat,quality:currentQuality})});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.detail||d.error||'Falha ao criar job.');currentJobId=d.job_id;els.cancelBtn.disabled=false;setProgress(8);setStatus('Processando...',currentFormat==='mp3'?'Seu áudio está sendo preparado.':'Seu vídeo está sendo preparado.');pollingTimer=setInterval(checkStatus,1200);await checkStatus()}catch(e){els.searchBtn.disabled=false;els.confirmDownloadBtn.disabled=false;setStatus('Erro ao iniciar download',e.message||String(e),true)}}
+    async function checkStatus(){if(!currentJobId)return;try{tickSoftProgress();const r=await fetch('/api/media/status/'+encodeURIComponent(currentJobId));const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.detail||d.error||'Falha ao consultar status.');const p=parseProgressFromLogs(d.logs||[]);if(p>0)setProgress(p);const last=getLastImportantLog(d.logs||[]),lower=last.toLowerCase();if(last.includes('[download]'))setStatus(currentFormat==='mp3'?'Baixando áudio...':'Baixando vídeo...','O arquivo está sendo baixado e preparado.');else if(lower.includes('merging')){setProgress(Math.max(softProgress,92));setStatus('Unindo áudio e vídeo...','Estamos gerando o MP4 final.')}else if(lower.includes('ffmpeg')||lower.includes('destination'))setStatus('Convertendo arquivo...',currentFormat==='mp3'?'Estamos finalizando o MP3.':'Estamos finalizando o MP4 com áudio.');else setStatus('Processando...',currentFormat==='mp3'?'Seu áudio está sendo convertido.':'Seu vídeo está sendo baixado e convertido.');if(d.status==='done'){clearInterval(pollingTimer);pollingTimer=null;setProgress(100);setStatus('Arquivo pronto',currentFormat==='mp3'?'Clique no botão abaixo para baixar o MP3 final.':'Clique no botão abaixo para baixar o MP4 final.');els.downloadBtn.textContent=currentFormat==='mp3'?'Baixar MP3 pronto':'Baixar MP4 pronto';els.downloadBtn.disabled=false;els.searchBtn.disabled=false;els.confirmDownloadBtn.disabled=false;els.cancelBtn.disabled=true;saveHistory({jobId:currentJobId,title:currentInfo?.title||els.videoUrl.value.trim(),format:currentFormat.toUpperCase(),quality:currentFormat==='mp3'?'Áudio':currentQuality,createdAt:new Date().toLocaleString('pt-BR')})}else if(d.status==='error'||d.status==='cancelled'){clearInterval(pollingTimer);pollingTimer=null;const err=getLastImportantLog(d.logs||[])||'Não foi possível concluir.';setStatus(d.status==='cancelled'?'Download cancelado':'Erro no download',err,d.status!=='cancelled');els.searchBtn.disabled=false;els.confirmDownloadBtn.disabled=false;els.downloadBtn.disabled=true;els.cancelBtn.disabled=true}}catch(e){clearInterval(pollingTimer);pollingTimer=null;setStatus('Erro de conexão',e.message||String(e),true);els.searchBtn.disabled=false;els.confirmDownloadBtn.disabled=false;els.cancelBtn.disabled=true}}
+    function downloadResult(){if(currentJobId)location.href='/api/media/files/'+encodeURIComponent(currentJobId)}
+    async function cancelDownload(){if(!currentJobId)return;try{els.cancelBtn.disabled=true;await fetch('/api/media/cancel/'+encodeURIComponent(currentJobId),{method:'POST'});setStatus('Cancelando...','Estamos interrompendo o processamento.')}catch(e){setStatus('Erro ao cancelar',e.message||String(e),true)}}
+    function resetFlow(){currentJobId=null;currentInfo=null;softProgress=0;if(pollingTimer)clearInterval(pollingTimer);els.previewWrap.hidden=true;els.miniStatus.hidden=true;els.videoUrl.value='';els.searchBtn.disabled=false;els.confirmDownloadBtn.disabled=false;els.cancelBtn.disabled=true;els.downloadBtn.disabled=true;setProgress(0)}
+    function getHistory(){try{return JSON.parse(localStorage.getItem('download_history')||'[]')}catch{return[]}}
+    function saveHistory(item){const h=getHistory();h.unshift(item);localStorage.setItem('download_history',JSON.stringify(h.slice(0,12)));renderHistory()}
+    function escapeHtml(str){return String(str||'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
+    function renderHistory(){const h=getHistory();els.historyList.innerHTML=h.length?h.map(i=>`<div class="historyItem"><div><div class="historyTitle">${escapeHtml(i.title)}</div><div class="historyMeta">${escapeHtml(i.format)} • ${escapeHtml(i.quality)} • ${escapeHtml(i.createdAt)}</div></div><button class="secondaryBtn" type="button" onclick="downloadHistory('${encodeURIComponent(i.jobId)}')">Baixar novamente</button></div>`).join(''):'<div class="historyMeta">Nenhum download finalizado nesta sessão.</div>'}
+    function downloadHistory(id){location.href='/api/media/files/'+id} function clearHistory(){localStorage.removeItem('download_history');renderHistory()}
+    async function loadAdmin(){try{const r=await fetch('/api/admin/summary');const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||d.detail||'Falha no admin.');els.adminGrid.innerHTML=`<div class="adminMetric"><b>${d.total_jobs??0}</b><span>Total jobs</span></div><div class="adminMetric"><b>${d.running_jobs??0}</b><span>Rodando</span></div><div class="adminMetric"><b>${d.done_jobs??0}</b><span>Concluídos</span></div><div class="adminMetric"><b>${d.error_jobs??0}</b><span>Erros</span></div>`}catch(e){els.adminGrid.innerHTML=`<div class="historyMeta errorText">${escapeHtml(e.message||String(e))}</div>`}}
+    els.themeBtn.addEventListener('click',()=>setTheme((document.documentElement.dataset.theme||'')==='dark'?'':'dark'));els.searchBtn.addEventListener('click',fetchInfo);els.confirmDownloadBtn.addEventListener('click',startDownload);els.clearPreviewBtn.addEventListener('click',()=>{els.previewWrap.hidden=true;currentInfo=null});els.downloadBtn.addEventListener('click',downloadResult);els.cancelBtn.addEventListener('click',cancelDownload);els.newDownloadBtn.addEventListener('click',resetFlow);els.formatMp4Btn.addEventListener('click',()=>setFormat('mp4'));els.formatMp3Btn.addEventListener('click',()=>setFormat('mp3'));els.qualityButtons.forEach(b=>b.addEventListener('click',()=>{if(!b.disabled)setQuality(b.dataset.quality)}));els.unlockNgrokBtn.addEventListener('click',()=>{location.href='/api/ngrok-unlock'});els.alreadyUnlockedBtn.addEventListener('click',markNgrokUnlocked);els.clearHistoryBtn.addEventListener('click',clearHistory);els.historyToggleBtn.addEventListener('click',()=>{renderHistory();els.historyWrap.hidden=!els.historyWrap.hidden});els.adminToggleBtn.addEventListener('click',()=>{els.adminWrap.hidden=!els.adminWrap.hidden;if(!els.adminWrap.hidden)loadAdmin()});els.refreshAdminBtn.addEventListener('click',loadAdmin);els.videoUrl.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();fetchInfo()}});
+    handleNgrokReturn();renderUnlockNotice();initTheme();renderHistory();checkServer();setInterval(checkServer,30000);
   </script>
 </body>
 </html>
