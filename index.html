@@ -220,9 +220,15 @@
     }
 
     function downloadResult(){
-      if(!currentJobId) return;
-      window.open('/api/media/files/' + encodeURIComponent(currentJobId), '_blank');
-    }
+  if(!currentJobId) return;
+
+  const a = document.createElement('a');
+  a.href = '/api/media/files/' + encodeURIComponent(currentJobId);
+  a.download = '';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
 
     els.searchBtn.addEventListener('click', startDownload);
     els.downloadBtn.addEventListener('click', downloadResult);
