@@ -3,9 +3,10 @@ export default async function handler(req, res) {
   const backendUrl = process.env.BACKEND_URL;
   if (!backendUrl) return res.status(500).json({ error: 'BACKEND_URL não configurada na Vercel.' });
   const { jobId } = req.query;
-  const upstream = await fetch(`${backendUrl.replace(/\/$/, '')}/api/media/jobs/${encodeURIComponent(jobId)}/cancel`, {
+  const upstream = await fetch(`${backendUrl.replace(/\/$/, '')}/api/media/convert/${encodeURIComponent(jobId)}`, {
     method: 'POST',
-    headers: { 'ngrok-skip-browser-warning': 'true', ...(process.env.BACKEND_TOKEN ? { 'X-Backend-Token': process.env.BACKEND_TOKEN } : {}) }
+    headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true', ...(process.env.BACKEND_TOKEN ? { 'X-Backend-Token': process.env.BACKEND_TOKEN } : {}) },
+    body: JSON.stringify(req.body)
   });
   const text = await upstream.text();
   res.status(upstream.status);

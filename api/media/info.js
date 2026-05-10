@@ -13,6 +13,6 @@ export default async function handler(req, res) {
     res.setHeader('Content-Type', upstream.headers.get('content-type') || 'application/json');
     return res.send(text);
   } catch (error) {
-    return res.status(502).json({ error: 'Falha ao buscar informações do vídeo.', detail: String(error?.message || error) });
+    return res.status(502).json({ error: 'Falha ao buscar informações.', detail: String(error?.message || error) });
   }
 }

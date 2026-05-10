@@ -1,0 +1,9 @@
+{
+  "name": "Download Online de Vídeos",
+  "short_name": "Downloader",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#dff3ff",
+  "theme_color": "#8ea3ff",
+  "icons": []
+}
